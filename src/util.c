@@ -26,7 +26,7 @@ void __libnthread_defaultpanichandler(const char *module, const char *file, long
 
     fprintf(stderr, "In \"%s\" at line %lld (%s):\n", file, line, function);
 
-    if (error != PANIC_NOERRORCODE) fprintf(stderr, "    \"%s\" because\n    ", ncore_strerror(error));
+    if (error != PANIC_NOERRORCODE) fprintf(stderr, "    \"%s\" because\n    ", n_strerror(error));
 
     fprintf(stderr, "    %s\n\n###################\n\n", description);
 }
