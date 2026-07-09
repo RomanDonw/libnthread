@@ -32,10 +32,10 @@ jobs:
             mkdir build
             cd build
 
-            cmake -S .. -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=$MSYSTEM_PREFIX -G "MinGW Makefiles"
+            cmake -S .. -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=$MSYSTEM_PREFIX -DCMAKE_BUILD_TYPE=Release -G "MinGW Makefiles"
             mingw32-make install
 
-            cmake -S .. -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=$MSYSTEM_PREFIX -G "MinGW Makefiles"
+            cmake -S .. -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=$MSYSTEM_PREFIX -DCMAKE_BUILD_TYPE=Release -G "MinGW Makefiles"
             mingw32-make install
 
       - name: Configure and Build
@@ -44,10 +44,10 @@ jobs:
           mkdir build
           cd build
 
-          cmake -S .. -G "MinGW Makefiles" -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=$MSYSTEM_PREFIX
+          cmake -S .. -G "MinGW Makefiles" -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=$MSYSTEM_PREFIX -DCMAKE_BUILD_TYPE=Release
           mingw32-make install
           
-          cmake -S .. -G "MinGW Makefiles" -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=$MSYSTEM_PREFIX
+          cmake -S .. -G "MinGW Makefiles" -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=$MSYSTEM_PREFIX -DCMAKE_BUILD_TYPE=Release
           mingw32-make install
 
           cd ..
