@@ -17,7 +17,7 @@ extern NMemoryAllocators __libnthread_allocators;
 extern NUnorderedSet *__libnthread_mutexlist;
 #define mutexlist (__libnthread_mutexlist)
 
-NThreadMutex *__libnthread_mutexlistmutex;
+extern NThreadMutex *__libnthread_mutexlistmutex;
 #define mutexlistmutex (__libnthread_mutexlistmutex)
 
 // =============================================================================
