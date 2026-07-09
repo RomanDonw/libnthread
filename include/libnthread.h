@@ -154,7 +154,7 @@ LIBNTHREAD_API NError LIBNTHREAD_ABI nthread_mutex_unlock(NThreadMutex *mutex);
 
 #elif defined(LIBNTHREAD_USEMSVCATOMICS)
 
-    typedef volatile unsigned char NThreadAtomicBool;
+    typedef unsigned char NThreadAtomicBool;
     #define NTHREAD_ATOMICBOOLINIT(value) ((bool)(value))
 
     static inline bool nthread_atomicbool_load(NThreadAtomicBool *variable)
@@ -186,7 +186,7 @@ LIBNTHREAD_API NError LIBNTHREAD_ABI nthread_mutex_unlock(NThreadMutex *mutex);
 
 #elif defined(LIBNTHREAD_USEGCCORCLANGATOMICS)
 
-    typedef volatile bool NThreadAtomicBool;
+    typedef bool NThreadAtomicBool;
     #define NTHREAD_ATOMICBOOLINIT(value) ((bool)(value))
 
     static inline bool nthread_atomicbool_load(NThreadAtomicBool *variable) { return __atomic_load_n(variable, __ATOMIC_SEQ_CST); }

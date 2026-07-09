@@ -51,16 +51,16 @@ NError libnthread_startup(const LibNThreadStartupOptions *options)
     if (options->alerthandler) __alerthandler = *options->alerthandler;
     else __alerthandler = __defaultalerthandler;
 
-    if ((nerr = n_unorderedset_create(&mutexlist, allocs, sizeof(NTHREAD_MUTEXDESCRIPTOR))) != NError_Success) goto errorquit_generic;
-
-    if ((nerr = __createmutex(&mutexlistmutex)) != NError_Success) goto errorquit_aftercreatemtxlist;
+    if ((nerr = n_unorderedset_create(&mutexlist, allocs, sizeof(NThreadMutex *))) != NError_Success) goto errorquit_generic;
 
     // =============================================================================
 
     #ifndef LIBNTHREAD_OS_WINDOWS
-        if ((nerr = translateerror(pthread_mutexattr_init(&recursivemutexattr)) != NError_Success)) goto errorquit_aftercreatemutexformtxlist;
-        if ((nerr = translateerror(pthread_mutexattr_settype(&recursivemutexattr, PTHREAD_MUTEXTYPE_RECURSIVE))) != NError_Success) goto errorquit_onsetmtxattrtype;
+        if ((nerr = translateerror(pthread_mutexattr_init(&recursivemutexattr)) != NError_Success)) goto errorquit_aftercreatemtxlist;
+        if ((nerr = translateerror(pthread_mutexattr_settype(&recursivemutexattr, PTHREAD_MUTEXTYPE_RECURSIVE))) != NError_Success) goto errorquit_afterinitmtxattr;
     #endif
+
+    if ((nerr = __createmutex(&mutexlistmutex)) != NError_Success) goto errorquit_oncreatemutexformtxlist;
 
     // =============================================================================
 
@@ -70,25 +70,30 @@ NError libnthread_startup(const LibNThreadStartupOptions *options)
 
     // =============================================================================
 
-    #ifndef LIBNTHREAD_OS_WINDOWS
-        errorquit_onsetmtxattrtype:
-            if ((nerr = translateerror(pthread_mutexattr_destroy(&recursivemutexattr))) != NError_Success)
-            { panic_general(nerr, "Unable to destroy pthread mutex attributes structure when handling error."); }
-            memset(&recursivemutexattr, 0, sizeof(pthread_mutexattr_t));
-    #endif
-    errorquit_aftercreatemutexformtxlist:
-        if ((nerr = __destroymutex(mutexlistmutex)) != NError_Success) panic_general(nerr, "Unable to destroy mutex of mutexes list when handling error.");
-        mutexlistmutex = NULL;
-    errorquit_aftercreatemtxlist:
-        n_unorderedset_destroy(mutexlist);
-        mutexlist = NULL;
-    errorquit_generic:
-        __alerthandler = NULL;
-        __panichandler = NULL;
-        memset(&allocs, 0, sizeof(allocs));
+    {
+        NError tmpnerr;
+
+        errorquit_oncreatemutexformtxlist:
+            if ((tmpnerr = __destroymutex(mutexlistmutex)) != NError_Success) panic_general(tmpnerr, "Unable to destroy mutex of mutexes list when handling error.");
+            mutexlistmutex = NULL;
+        #ifndef LIBNTHREAD_OS_WINDOWS
+            errorquit_afterinitmtxattr:
+                if ((tmpnerr = translateerror(pthread_mutexattr_destroy(&recursivemutexattr))) != NError_Success)
+                { panic_general(tmpnerr, "Unable to destroy pthread mutex attributes structure when handling error."); }
+                memset(&recursivemutexattr, 0, sizeof(pthread_mutexattr_t));
+        #endif
+        errorquit_aftercreatemtxlist:
+            n_unorderedset_destroy(mutexlist);
+            mutexlist = NULL;
+        errorquit_generic:
+            __alerthandler = NULL;
+            __panichandler = NULL;
+            memset(&allocs, 0, sizeof(allocs));
+    }
 
     nthread_atomicbool_store(&funcslock, false);
     return nerr;
+    
 }
 
 NError libnthread_cleanup(void)
@@ -108,9 +113,9 @@ NError libnthread_cleanup(void)
 
     // =============================================================================
 
+    NThreadMutex *mutex;
     for (size_t i = 0; i < n_unorderedset_getlength(mutexlist); i++)
     {
-        NThreadMutex *mutex;
         if (((nerr = n_unorderedset_getelement(mutexlist, i, &mutex)) != NError_Success) || ((nerr = __destroymutex(mutex)) != NError_Success))
         { panic_general(nerr, n_panicmsg_mutexdestroyduringlibrarycleanup); }
     }

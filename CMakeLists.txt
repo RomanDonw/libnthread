@@ -66,3 +66,5 @@ install(EXPORT libnthreadTargets
     NAMESPACE libnthread::
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libnthread
 )
+
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/tests.cmake")

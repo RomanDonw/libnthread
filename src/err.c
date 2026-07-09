@@ -12,6 +12,9 @@ NError __libnthread_translateerror(int err)
 {
     switch (err)
     {
+        case 0:
+            return NError_Success;
+
         case ENOMEM:
             return NError_MemoryAllocationFailed;
 

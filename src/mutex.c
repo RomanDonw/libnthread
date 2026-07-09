@@ -20,14 +20,14 @@ NError nthread_mutex_create(NThreadMutex **mutex)
     if (nerr != NError_Success) return nerr;
 
     SAFE_MUTEX_LOCK(mutexlistmutex);
-    if ((nerr = n_unorderedset_addelement(mutexlist, &mutex)) != NError_Success) panic_general(nerr, "Unable to add mutex to mutexes list after factual creation.");
+    if ((nerr = n_unorderedset_addelement(mutexlist, &ret)) != NError_Success) panic_general(nerr, "Unable to add mutex to mutexes list after factual creation.");
     SAFE_MUTEX_UNLOCK(mutexlistmutex);
     
     *mutex = ret;
     return NError_Success;
 }
 
-NError nthread_mutex_destory(NThreadMutex *mutex)
+NError nthread_mutex_destroy(NThreadMutex *mutex)
 {
     ENSURE_INIT;
 

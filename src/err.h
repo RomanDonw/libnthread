@@ -12,12 +12,8 @@
 #ifndef LIBNTHREAD_OS_WINDOWS
     #include <errno.h>
 
-    #define GETLASTERROR() (errno)
+    NError __libnthread_translateerror(int err);
+    #define translateerror(err) (__libnthread_translateerror(err))
 #endif
-
-NError __libnthread_translateerror(int err);
-#define translateerror(err) (__libnthread_translateerror(err))
-
-#define GETLASTTRANSLATEDSYSERR() (translateerror(GETLASTERROR()))
 
 #endif
