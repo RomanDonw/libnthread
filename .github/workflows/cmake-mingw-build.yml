@@ -18,6 +18,26 @@ jobs:
             mingw-w64-ucrt-x86_64-cmake
             mingw-w64-ucrt-x86_64-make
 
+      - name: Checkout libncore code
+        uses: actions/checkout@v4
+        with:
+          repository: RomanDonw/libncore
+          path: libncore
+
+      - name: Setup dependencies
+        shell: msys2 {0}
+        run: |
+            cd libncore
+
+            mkdir build
+            cd build
+
+            cmake -S .. -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=$MSYSTEM_PREFIX -G "MinGW Makefiles"
+            mingw32-make install
+
+            cmake -S .. -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=$MSYSTEM_PREFIX -G "MinGW Makefiles"
+            mingw32-make install
+
       - name: Configure and Build
         shell: msys2 {0}
         run: |
