@@ -98,9 +98,9 @@ NError libnthread_cleanup(void)
 
     // =============================================================================
 
-    #ifndef LIBNTHREAD_OS_WINDOWS
-        NError nerr;
+    NError nerr;
 
+    #ifndef LIBNTHREAD_OS_WINDOWS
         if ((nerr = translateerror(pthread_mutexattr_destroy(&recursivemutexattr))) != NError_Success)
         { nthread_atomicbool_store(&funcslock, false); return nerr; }
         memset(&recursivemutexattr, 0, sizeof(pthread_mutexattr_t));
@@ -110,7 +110,9 @@ NError libnthread_cleanup(void)
 
     for (size_t i = 0; i < n_unorderedset_getlength(mutexlist); i++)
     {
-        
+        NThreadMutex *mutex;
+        if (((nerr = n_unorderedset_getelement(mutexlist, i, &mutex)) != NError_Success) || ((nerr = __destroymutex(mutex)) != NError_Success))
+        { panic_general(nerr, n_panicmsg_mutexdestroyduringlibrarycleanup); }
     }
 
     if ((nerr = __destroymutex(mutexlistmutex)) != NError_Success) panic_general(nerr, n_panicmsg_mutexdestroyduringlibrarycleanup);
