@@ -10,13 +10,47 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "err.h"
+#include "types.h"
+
 const char *LIBNTHREAD_MODULENAME = "libnthread";
 
 NMemoryAllocators __libnthread_allocators = {0};
+NUnorderedSet *__libnthread_mutexlist = NULL;
+NThreadMutex *__libnthread_mutexlistmutex = NULL;
 
 #ifndef LIBNTHREAD_OS_WINDOWS
     pthread_mutexattr_t __libnthread_recursivemutexattr;
 #endif
+
+NError __libnthread_createmutex(NThreadMutex **mutex)
+{
+    NThreadMutex *ret = allocs.malloc(sizeof(NThreadMutex));
+    if (!ret) return NError_MemoryAllocationFailed;
+
+    #ifdef LIBNTHREAD_OS_WINDOWS
+        InitializeCriticalSection(&ret->desc);
+    #else
+        int err = pthread_mutex_init(&ret->desc, &recursivemutexattr);
+        if (err) { allocs.free(ret); return translateerror(err); }
+    #endif
+
+    *mutex = ret;
+    return NError_Success;
+}
+
+NError __libnthread_destroymutex(NThreadMutex *mutex)
+{
+    #ifdef LIBMUTEX_OS_WINDOWS
+        DeleteCriticalSection(&mutex->desc);
+    #else
+        int err = pthread_mutex_destroy(&mutex->desc);
+        if (err) return translateerror(err);
+    #endif
+
+    allocs.free(mutex);
+    return NError_Success;
+}
 
 // =============================================================================
 

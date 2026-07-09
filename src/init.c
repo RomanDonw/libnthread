@@ -29,8 +29,10 @@ bool libnthread_initialized(void) { return ISLIBRARYINITED(); }
 
 NError libnthread_startup(const LibNThreadStartupOptions *options)
 {
-    if (!nthread_atomicbool_cmpxchgt(&funcslock, false, true)) return NError_OperationInProgress;
+    if (nthread_atomicbool_cmpxchgv(&funcslock, false, true)) return NError_OperationInProgress;
     if (ISLIBRARYINITED()) { nthread_atomicbool_store(&funcslock, false); return NError_AlreadyInitialized; }
+
+    NError nerr;
 
     static const LibNThreadStartupOptions defaultopts = LIBNTHREADSTARTUPOPTIONS_DEFAULTINIT;
     if (!options) options = &defaultopts;
@@ -49,12 +51,14 @@ NError libnthread_startup(const LibNThreadStartupOptions *options)
     if (options->alerthandler) __alerthandler = *options->alerthandler;
     else __alerthandler = __defaultalerthandler;
 
+    if ((nerr = n_unorderedset_create(&mutexlist, allocs, sizeof(NTHREAD_MUTEXDESCRIPTOR))) != NError_Success) goto errorquit_generic;
+
+    if ((nerr = __createmutex(&mutexlistmutex)) != NError_Success) goto errorquit_aftercreatemtxlist;
+
     // =============================================================================
 
     #ifndef LIBNTHREAD_OS_WINDOWS
-        NError nerr;
-
-        if ((nerr = translateerror(pthread_mutexattr_init(&recursivemutexattr)) != NError_Success)) goto errorquit_generic;
+        if ((nerr = translateerror(pthread_mutexattr_init(&recursivemutexattr)) != NError_Success)) goto errorquit_aftercreatemutexformtxlist;
         if ((nerr = translateerror(pthread_mutexattr_settype(&recursivemutexattr, PTHREAD_MUTEXTYPE_RECURSIVE))) != NError_Success) goto errorquit_onsetmtxattrtype;
     #endif
 
@@ -67,27 +71,29 @@ NError libnthread_startup(const LibNThreadStartupOptions *options)
     // =============================================================================
 
     #ifndef LIBNTHREAD_OS_WINDOWS
-        {
-            NError tmpnerr;
-
-            errorquit_onsetmtxattrtype:
-                if ((tmpnerr = translateerror(pthread_mutexattr_destroy(&recursivemutexattr))) != NError_Success)
-                { panic_general(tmpnerr, "Unable to destroy pthread mutex attributes structure when handling error."); }
-                memset(&recursivemutexattr, 0, sizeof(pthread_mutexattr_t));
-            errorquit_generic:
-                __alerthandler = NULL;
-                __panichandler = NULL;
-                memset(&allocs, 0, sizeof(allocs));
-        }
-
-        nthread_atomicbool_store(&funcslock, false);
-        return nerr;
+        errorquit_onsetmtxattrtype:
+            if ((nerr = translateerror(pthread_mutexattr_destroy(&recursivemutexattr))) != NError_Success)
+            { panic_general(nerr, "Unable to destroy pthread mutex attributes structure when handling error."); }
+            memset(&recursivemutexattr, 0, sizeof(pthread_mutexattr_t));
     #endif
+    errorquit_aftercreatemutexformtxlist:
+        if ((nerr = __destroymutex(mutexlistmutex)) != NError_Success) panic_general(nerr, "Unable to destroy mutex of mutexes list when handling error.");
+        mutexlistmutex = NULL;
+    errorquit_aftercreatemtxlist:
+        n_unorderedset_destroy(mutexlist);
+        mutexlist = NULL;
+    errorquit_generic:
+        __alerthandler = NULL;
+        __panichandler = NULL;
+        memset(&allocs, 0, sizeof(allocs));
+
+    nthread_atomicbool_store(&funcslock, false);
+    return nerr;
 }
 
 NError libnthread_cleanup(void)
 {
-    if (!nthread_atomicbool_cmpxchgt(&funcslock, false, true)) return NError_OperationInProgress;
+    if (nthread_atomicbool_cmpxchgv(&funcslock, false, true)) return NError_OperationInProgress;
     if (!ISLIBRARYINITED()) { nthread_atomicbool_store(&funcslock, false); return NError_NotInitialized; }
 
     // =============================================================================
@@ -101,6 +107,17 @@ NError libnthread_cleanup(void)
     #endif
 
     // =============================================================================
+
+    for (size_t i = 0; i < n_unorderedset_getlength(mutexlist); i++)
+    {
+        
+    }
+
+    if ((nerr = __destroymutex(mutexlistmutex)) != NError_Success) panic_general(nerr, n_panicmsg_mutexdestroyduringlibrarycleanup);
+    mutexlistmutex = NULL;
+
+    n_unorderedset_destroy(mutexlist);
+    mutexlist = NULL;
 
     __alerthandler = NULL;
     __panichandler = NULL;

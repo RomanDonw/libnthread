@@ -14,10 +14,30 @@
 extern NMemoryAllocators __libnthread_allocators;
 #define allocs __libnthread_allocators
 
+extern NUnorderedSet *__libnthread_mutexlist;
+#define mutexlist (__libnthread_mutexlist)
+
+NThreadMutex *__libnthread_mutexlistmutex;
+#define mutexlistmutex (__libnthread_mutexlistmutex)
+
+// =============================================================================
+
 #ifndef LIBNTHREAD_OS_WINDOWS
     extern pthread_mutexattr_t __libnthread_recursivemutexattr;
     #define recursivemutexattr (__libnthread_recursivemutexattr)
 #endif
+
+NError __libnthread_createmutex(NThreadMutex **mutex);
+#define __createmutex (__libnthread_createmutex)
+
+NError __libnthread_destroymutex(NThreadMutex *mutex);
+#define __destroymutex (__libnthread_destroymutex)
+
+#define SAFE_MUTEX_LOCK(mutex) \
+    { NError nerr = nthread_mutex_lock(mutex); if (nerr != NError_Success) panic_general(nerr, n_panicmsg_mutexlock); }
+
+#define SAFE_MUTEX_UNLOCK(mutex) \
+    { NError nerr = nthread_mutex_unlock(mutex); if (nerr != NError_Success) panic_general(nerr, n_panicmsg_mutexunlock); }
 
 // =============================================================================
 
