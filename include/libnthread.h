@@ -54,10 +54,10 @@
 #elif defined(_MSC_VER)
     #define LIBNTHREAD_USEMSVCATOMICS
 
+    #include <intrin.h>
+
     #if defined(_M_ARM) || defined(_M_ARM64)
         #define LIBNTHREAD_USEDMSVCONARM
-    #else
-        #include <intrin.h>
     #endif
 #elif defined(__GNUC__) || defined(__clang__)
     #define LIBNTHREAD_USEGCCORCLANGATOMICS
