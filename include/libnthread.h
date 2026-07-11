@@ -53,7 +53,6 @@
     #include <stdatomic.h>
 #elif defined(_MSC_VER)
     #define LIBNTHREAD_USEMSVCATOMICS
-
     #include <intrin.h>
 
     #if defined(_M_ARM) || defined(_M_ARM64)
