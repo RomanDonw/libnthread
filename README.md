@@ -1,4 +1,4 @@
-# # Universal cross-platform C99/C++ multithreading library.
+# Universal cross-platform C99/C++ multithreading library.
 
 <!-- ========================================================================================================================================================== -->
 
