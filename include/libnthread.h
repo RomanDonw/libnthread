@@ -33,10 +33,6 @@
         #endif
     #endif
 
-    #if defined(_MSC_VER) && (defined(_M_ARM) || defined(_M_ARM64))
-        #define LIBNTHREAD_USEDMSVCONARM
-    #endif
-
     #include <windows.h>
 
     typedef CRITICAL_SECTION NTHREAD_MUTEXDESCRIPTOR;
@@ -52,14 +48,17 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#include <libncore.h>
-
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS__)
     #define LIBNTHREAD_USEC11ATOMICS
     #include <stdatomic.h>
 #elif defined(_MSC_VER)
     #define LIBNTHREAD_USEMSVCATOMICS
-    #include <intrin.h>
+
+    #if defined(_M_ARM) || defined(_M_ARM64)
+        #define LIBNTHREAD_USEDMSVCONARM
+    #else
+        #include <intrin.h>
+    #endif
 #elif defined(__GNUC__) || defined(__clang__)
     #define LIBNTHREAD_USEGCCORCLANGATOMICS
 #else
@@ -154,20 +153,36 @@ LIBNTHREAD_API NError LIBNTHREAD_ABI nthread_mutex_unlock(NThreadMutex *mutex);
 
 #elif defined(LIBNTHREAD_USEMSVCATOMICS)
 
-    typedef unsigned char NThreadAtomicBool;
+    #if defined(_ARM64_BARRIER_ISH)
+        #define LIBNTHREAD_ARMMEMORYBARRIER _ARM64_BARRIER_ISH
+    #elif defined(_ARM_BARRIER_ISH)
+        #define LIBNTHREAD_ARMMEMORYBARRIER _ARM_BARRIER_ISH
+    #endif
+
+    typedef volatile char NThreadAtomicBool;
     #define NTHREAD_ATOMICBOOLINIT(value) ((bool)(value))
 
     static inline bool nthread_atomicbool_load(NThreadAtomicBool *variable)
     {
         #ifdef LIBNTHREAD_USEDMSVCONARM
-            return _InterlockedExchangeAdd8(variable, 0);
+            bool ret = __iso_volatile_load8(variable);
+            __dmb(LIBNTHREAD_ARMMEMORYBARRIER);
         #else
-            register bool ret = *variable;
+            bool ret = *(volatile bool *)variable;
             _ReadWriteBarrier();
-            return ret;
+        #endif
+        return ret;
+    }
+    static inline void nthread_atomicbool_store(NThreadAtomicBool *variable, bool desired)
+    {
+        #ifdef LIBNTHREAD_USEDMSVCONARM
+            __dmb(LIBNTHREAD_ARMMEMORYBARRIER);
+            __iso_volatile_store8(variable, desired);
+        #else
+            _ReadWriteBarrier();
+            *variable = desired;
         #endif
     }
-    static inline void nthread_atomicbool_store(NThreadAtomicBool *variable, bool desired) { _InterlockedExchange8(variable, desired); }
 
     static inline bool nthread_atomicbool_cmpxchgv(NThreadAtomicBool *variable, bool expected, bool desired)
     { return _InterlockedCompareExchange8(variable, (unsigned char)desired, (unsigned char)expected); }
