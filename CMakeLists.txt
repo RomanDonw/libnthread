@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.23)
 
 # ========== SETTINGS ==========
-project(nthread VERSION 0.3.0 LANGUAGES C)
+project(nthread VERSION 0.0 LANGUAGES C)
 
 set(VERSION_CHECK_METHOD SameMajorVersion)
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
@@ -12,7 +12,7 @@ set(CMAKE_C_EXTENSIONS OFF)
 
 set(DEP_LIBNCORE_PACKAGENAME libncore)
 set(DEP_LIBNCORE_TARGETNAME ncore)
-set(DEP_LIBNCORE_REQMINVER 0.0.0)
+set(DEP_LIBNCORE_REQMINVER 0.0)
 # ========== ======== ==========
 
 include(GNUInstallDirs)

@@ -81,8 +81,8 @@ NError libnthread_startup(const LibNThreadStartupOptions *options)
                 if ((tmpnerr = translateerror(pthread_mutexattr_destroy(&recursivemutexattr))) != NError_Success)
                 { panic_general(tmpnerr, "Unable to destroy pthread mutex attributes structure when handling error."); }
                 memset(&recursivemutexattr, 0, sizeof(pthread_mutexattr_t));
+            errorquit_aftercreatemtxlist:
         #endif
-        errorquit_aftercreatemtxlist:
             n_unorderedset_destroy(mutexlist);
             mutexlist = NULL;
         errorquit_generic:

@@ -45,7 +45,7 @@ NError nthread_mutex_lock(NThreadMutex *mutex)
 {
     ENSURE_INIT;
 
-    #ifdef LIBMUTEX_OS_WINDOWS
+    #ifdef LIBNTHREAD_OS_WINDOWS
         EnterCriticalSection(&mutex->desc);
         return NError_Success;
     #else
@@ -57,7 +57,7 @@ NError nthread_mutex_trylock(NThreadMutex *mutex)
 {
     ENSURE_INIT;
 
-    #ifdef LIBMUTEX_OS_WINDOWS
+    #ifdef LIBNTHREAD_OS_WINDOWS
         return TryEnterCriticalSection(&mutex->desc) ? NError_Success : NError_MutexBusy;
     #else
         return translateerror(pthread_mutex_trylock(&mutex->desc));
@@ -66,7 +66,7 @@ NError nthread_mutex_trylock(NThreadMutex *mutex)
 
 NError nthread_mutex_unlock(NThreadMutex *mutex)
 {
-    #ifdef LIBMUTEX_OS_WINDOWS
+    #ifdef LIBNTHREAD_OS_WINDOWS
         LeaveCriticalSection(&mutex->desc);
         return NError_Success;
     #else

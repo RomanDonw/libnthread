@@ -43,7 +43,7 @@ NError __libnthread_createmutex(NThreadMutex **mutex)
 
 NError __libnthread_destroymutex(NThreadMutex *mutex)
 {
-    #ifdef LIBMUTEX_OS_WINDOWS
+    #ifdef LIBNTHREAD_OS_WINDOWS
         DeleteCriticalSection(&mutex->desc);
     #else
         int err = pthread_mutex_destroy(&mutex->desc);
