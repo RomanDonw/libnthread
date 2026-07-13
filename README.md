@@ -62,7 +62,7 @@ Also just run `sudo make install`. Library will be installed to your system.
 Include `<libnthread.h>` header where you need to use this library. That link your executable with library by adding flag to command line `-lnthread`. On Linux (POSIX) you already need to link you executable with `pthread` library, so just add flag `-lpthread` command line. If you use static version of this library, please specify definition `LIBNTHREAD_STATIC` when you compile file, where included <ins>libnthread</ins> header.
 
 ### CMake
-If you using CMake in your project, add `libnthread` by same method or with using `find_package`:
+If you using CMake in your project, add `libnthread` by using `find_package`:
 
 ```cmake
 find_package(libnthread REQUIRED)
@@ -70,6 +70,9 @@ target_link_libraries(<target> PRIVATE libnthread::nthread)
 ```
 
 This will fully automatily setup <ins>libnthread</ins> for your project. By default CMake will use static version of <ins>libnthread</ins>, so if you want to use dynamic version of this library, set `BUILD_SHARED_LIBS` flag in your CMake config command prompt to `ON`.
+
+## Tests
+All tests are available in `/tests/` folder in the root of git-repository.
 
 ## Debugging & Troubleshooting
 
