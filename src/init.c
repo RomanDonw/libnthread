@@ -51,7 +51,7 @@ NError libnthread_startup(const LibNThreadStartupOptions *options)
     if (options->alerthandler) __alerthandler = *options->alerthandler;
     else __alerthandler = __defaultalerthandler;
 
-    if ((nerr = n_unorderedset_create(&mutexlist, allocs, sizeof(NThreadMutex *))) != NError_Success) goto errorquit_generic;
+    if ((nerr = n_unorderedset_create(&mutexlist, &allocs, sizeof(NThreadMutex *))) != NError_Success) goto errorquit_generic;
 
     // =============================================================================
 
