@@ -16,8 +16,10 @@
 const char *LIBNTHREAD_MODULENAME = "libnthread";
 
 NMemoryAllocators __libnthread_allocators = {0};
+
 NUnorderedSet *__libnthread_mutexlist = NULL;
 NThreadMutex *__libnthread_mutexlistmutex = NULL;
+
 NPanicHandler *__libnthread_panichandler = NULL;
 NAlertHandler *__libnthread_alerthandler = NULL;
 
