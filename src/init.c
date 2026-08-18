@@ -121,19 +121,21 @@ NError libnthread_cleanup(void)
     #endif
 
     // =============================================================================
-
+    
+    /// TODO: add destroying all threads from list here later.
+    
+    if ((nerr = __destroymutex(threadlistmutex)) != NError_Success) panic_general(nerr, n_panicmsg_mutexdestroyduringlibrarycleanup);
+    threadlistmutex = NULL;
+    n_unorderedset_destroy(threadlist);
+    threadlist = NULL;
+    
     NThreadMutex *mutex;
     for (size_t i = 0; i < n_unorderedset_getlength(mutexlist); i++)
     {
         if (((nerr = n_unorderedset_getelement(mutexlist, i, &mutex)) != NError_Success) || ((nerr = __destroymutex(mutex)) != NError_Success))
         { panic_general(nerr, n_panicmsg_mutexdestroyduringlibrarycleanup); }
     }
-
-    if ((nerr = __destroymutex(threadlistmutex)) != NError_Success) panic_general(nerr, n_panicmsg_mutexdestroyduringlibrarycleanup);
-    threadlistmutex = NULL;
-    n_unorderedset_destroy(threadlist);
-    threadlist = NULL;
-
+    
     if ((nerr = __destroymutex(mutexlistmutex)) != NError_Success) panic_general(nerr, n_panicmsg_mutexdestroyduringlibrarycleanup);
     mutexlistmutex = NULL;
     n_unorderedset_destroy(mutexlist);
