@@ -9,6 +9,7 @@
 
 #include "libnthread.h"
 
+struct NThread { NTHREAD_THREADDESCRIPTOR desc; };
 struct NThreadMutex { NTHREAD_MUTEXDESCRIPTOR desc; };
 
 #endif

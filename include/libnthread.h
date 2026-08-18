@@ -34,19 +34,23 @@
     #endif
 
     #include <windows.h>
+    #include <process.h>
 
+    typedef uintptr_t NTHREAD_THREADDESCRIPTOR;
     typedef CRITICAL_SECTION NTHREAD_MUTEXDESCRIPTOR;
 #else
     #define LIBNTHREAD_API __attribute__((visibility("default")))
 
     #include <pthread.h>
 
+    typedef pthread_t NTHREAD_THREADDESCRIPTOR;
     typedef pthread_mutex_t NTHREAD_MUTEXDESCRIPTOR;
 #endif
 
 #include <libncore.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS__)
     #define LIBNTHREAD_USEC11ATOMICS
@@ -94,6 +98,12 @@ LIBNTHREAD_API NError LIBNTHREAD_ABI libnthread_cleanup(void);
 */
 
 typedef struct NThread NThread;
+typedef uint8_t NThreadReturnType;
+typedef NThreadReturnType (*NThreadHandler)(void *);
+
+LIBNTHREAD_API NError LIBNTHREAD_ABI nthread_create(NThread **thread, NThreadHandler handler, void *userdata); // userdata can be NULL.
+LIBNTHREAD_API NError LIBNTHREAD_ABI nthread_join(NThread *thread, NThreadReturnType *exitcode); // exitcode can be NULL.
+//LIBNTHREAD_API void LIBNTHREAD_ABI nthread_exit(NThreadReturnType exitcode);
 
 /*
     #########################
@@ -117,6 +127,7 @@ LIBNTHREAD_API NError LIBNTHREAD_ABI nthread_mutex_unlock(NThreadMutex *mutex);
 */
 
 #if defined(LIBNTHREAD_ALLOWUNSAFEACCESS) || defined(LIBNTHREAD_EXPORT)
+    LIBNTHREAD_API NTHREAD_THREADDESCRIPTOR LIBNTHREAD_ABI nthread_gethandle(const NThread *thread);
     LIBNTHREAD_API NTHREAD_MUTEXDESCRIPTOR LIBNTHREAD_ABI nthread_mutex_gethandle(const NThreadMutex *mutex);
 #endif
 

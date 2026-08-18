@@ -38,7 +38,7 @@ NError __libnthread_createmutex(NThreadMutex **mutex)
         InitializeCriticalSection(&ret->desc);
     #else
         int err = pthread_mutex_init(&ret->desc, &recursivemutexattr);
-        if (err) { allocs.free(ret); return translateerror(err); }
+        if (err) { allocs.free(ret); return translateERRNOerror(err); }
     #endif
 
     *mutex = ret;
@@ -51,7 +51,7 @@ NError __libnthread_destroymutex(NThreadMutex *mutex)
         DeleteCriticalSection(&mutex->desc);
     #else
         int err = pthread_mutex_destroy(&mutex->desc);
-        if (err) return translateerror(err);
+        if (err) return translateERRNOerror(err);
     #endif
 
     allocs.free(mutex);

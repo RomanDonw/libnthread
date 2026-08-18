@@ -9,11 +9,12 @@
 
 #include "libnthread.h"
 
-#ifndef LIBNTHREAD_OS_WINDOWS
-    #include <errno.h>
+NError __libnthread_translateERRNOerror(int err);
+#define translateERRNOerror(err) (__libnthread_translateERRNOerror(err))
 
-    NError __libnthread_translateerror(int err);
-    #define translateerror(err) (__libnthread_translateerror(err))
+#ifdef LIBNTHREAD_OS_WINDOWS
+    NError __libnthread_translateWINAPIerror(DWORD err);
+    #define translateWINAPIerror(err) (__libnthread_translateWINAPIerror(err))
 #endif
 
 #endif

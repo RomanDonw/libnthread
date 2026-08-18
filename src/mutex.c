@@ -31,14 +31,17 @@ NError nthread_mutex_destroy(NThreadMutex *mutex)
 {
     ENSURE_INIT;
 
-    NError nerr = __destroymutex(mutex);
-    if (nerr != NError_Success) return nerr;
-
     SAFE_MUTEX_LOCK(mutexlistmutex);
-    if ((nerr = n_unorderedset_removeelement(mutexlist, &mutex)) != NError_Success) panic_general(nerr, "Unable to remove mutex from mutexes list after factual destroying.");
-    SAFE_MUTEX_UNLOCK(mutexlistmutex);
+    NError nerr = NError_Success;
+    if (!n_unorderedset_haselement(mutexlist, &mutex)) { nerr = NError_Fault; goto quit; };
 
-    return NError_Success;
+    if ((nerr = __destroymutex(mutex)) != NError_Success) goto quit;
+
+    if ((nerr = n_unorderedset_removeelement(mutexlist, &mutex)) != NError_Success) panic_general(nerr, "Unable to remove mutex from mutexes list after factual destroying.");
+    
+    quit:
+    SAFE_MUTEX_UNLOCK(mutexlistmutex);
+    return nerr;
 }
 
 NError nthread_mutex_lock(NThreadMutex *mutex)
@@ -49,7 +52,7 @@ NError nthread_mutex_lock(NThreadMutex *mutex)
         EnterCriticalSection(&mutex->desc);
         return NError_Success;
     #else
-        return translateerror(pthread_mutex_lock(&mutex->desc));
+        return translateERRNOerror(pthread_mutex_lock(&mutex->desc));
     #endif
 }
 
@@ -60,7 +63,7 @@ NError nthread_mutex_trylock(NThreadMutex *mutex)
     #ifdef LIBNTHREAD_OS_WINDOWS
         return TryEnterCriticalSection(&mutex->desc) ? NError_Success : NError_MutexBusy;
     #else
-        return translateerror(pthread_mutex_trylock(&mutex->desc));
+        return translateERRNOerror(pthread_mutex_trylock(&mutex->desc));
     #endif
 }
 
@@ -70,6 +73,6 @@ NError nthread_mutex_unlock(NThreadMutex *mutex)
         LeaveCriticalSection(&mutex->desc);
         return NError_Success;
     #else
-        return translateerror(pthread_mutex_unlock(&mutex->desc));
+        return translateERRNOerror(pthread_mutex_unlock(&mutex->desc));
     #endif
 }

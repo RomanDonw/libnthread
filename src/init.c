@@ -56,8 +56,8 @@ NError libnthread_startup(const LibNThreadStartupOptions *options)
     // =============================================================================
 
     #ifndef LIBNTHREAD_OS_WINDOWS
-        if ((nerr = translateerror(pthread_mutexattr_init(&recursivemutexattr)) != NError_Success)) goto errorquit_aftercreatemtxlist;
-        if ((nerr = translateerror(pthread_mutexattr_settype(&recursivemutexattr, PTHREAD_MUTEXTYPE_RECURSIVE))) != NError_Success) goto errorquit_afterinitmtxattr;
+        if ((nerr = translateERRNOerror(pthread_mutexattr_init(&recursivemutexattr)) != NError_Success)) goto errorquit_aftercreatemtxlist;
+        if ((nerr = translateERRNOerror(pthread_mutexattr_settype(&recursivemutexattr, PTHREAD_MUTEXTYPE_RECURSIVE))) != NError_Success) goto errorquit_afterinitmtxattr;
     #endif
 
     if ((nerr = __createmutex(&mutexlistmutex)) != NError_Success) goto errorquit_oncreatemutexformtxlist;
@@ -87,7 +87,7 @@ NError libnthread_startup(const LibNThreadStartupOptions *options)
         errorquit_oncreatemutexformtxlist:
         #ifndef LIBNTHREAD_OS_WINDOWS
             errorquit_afterinitmtxattr:
-                if ((tmpnerr = translateerror(pthread_mutexattr_destroy(&recursivemutexattr))) != NError_Success)
+                if ((tmpnerr = translateERRNOerror(pthread_mutexattr_destroy(&recursivemutexattr))) != NError_Success)
                 { panic_general(tmpnerr, "Unable to destroy pthread mutex attributes structure when handling error."); }
                 memset(&recursivemutexattr, 0, sizeof(pthread_mutexattr_t));
             errorquit_aftercreatemtxlist:
@@ -115,7 +115,7 @@ NError libnthread_cleanup(void)
     NError nerr;
 
     #ifndef LIBNTHREAD_OS_WINDOWS
-        if ((nerr = translateerror(pthread_mutexattr_destroy(&recursivemutexattr))) != NError_Success)
+        if ((nerr = translateERRNOerror(pthread_mutexattr_destroy(&recursivemutexattr))) != NError_Success)
         { nthread_atomicbool_store(&funcslock, false); return nerr; }
         memset(&recursivemutexattr, 0, sizeof(pthread_mutexattr_t));
     #endif
