@@ -16,12 +16,14 @@
 const char *LIBNTHREAD_MODULENAME = "libnthread";
 
 NMemoryAllocators __libnthread_allocators = {0};
+NPanicHandler *__libnthread_panichandler = NULL;
+NAlertHandler *__libnthread_alerthandler = NULL;
+
+NUnorderedSet *__libnthread_threadlist = NULL;
+NThreadMutex *__libnthread_threadlistmutex = NULL;
 
 NUnorderedSet *__libnthread_mutexlist = NULL;
 NThreadMutex *__libnthread_mutexlistmutex = NULL;
-
-NPanicHandler *__libnthread_panichandler = NULL;
-NAlertHandler *__libnthread_alerthandler = NULL;
 
 #ifndef LIBNTHREAD_OS_WINDOWS
     pthread_mutexattr_t __libnthread_recursivemutexattr = {0};

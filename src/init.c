@@ -64,6 +64,11 @@ NError libnthread_startup(const LibNThreadStartupOptions *options)
 
     // =============================================================================
 
+    if ((nerr = n_unorderedset_create(&threadlist, &allocs, sizeof(NThread *))) != NError_Success) goto errorquit_aftercreatemutexformtxlist;
+    if ((nerr = __createmutex(&threadlistmutex)) != NError_Success) goto errorquit_aftercreatethdlist;
+
+    // =============================================================================
+
     nthread_atomicbool_store(&inited, true);
     nthread_atomicbool_store(&funcslock, false);
     return NError_Success;
@@ -73,9 +78,13 @@ NError libnthread_startup(const LibNThreadStartupOptions *options)
     {
         NError tmpnerr;
 
-        errorquit_oncreatemutexformtxlist:
+        errorquit_aftercreatethdlist:
+            n_unorderedset_destroy(threadlist);
+            threadlist = NULL;
+        errorquit_aftercreatemutexformtxlist:
             if ((tmpnerr = __destroymutex(mutexlistmutex)) != NError_Success) panic_general(tmpnerr, "Unable to destroy mutex of mutexes list when handling error.");
             mutexlistmutex = NULL;
+        errorquit_oncreatemutexformtxlist:
         #ifndef LIBNTHREAD_OS_WINDOWS
             errorquit_afterinitmtxattr:
                 if ((tmpnerr = translateerror(pthread_mutexattr_destroy(&recursivemutexattr))) != NError_Success)
@@ -120,9 +129,13 @@ NError libnthread_cleanup(void)
         { panic_general(nerr, n_panicmsg_mutexdestroyduringlibrarycleanup); }
     }
 
+    if ((nerr = __destroymutex(threadlistmutex)) != NError_Success) panic_general(nerr, n_panicmsg_mutexdestroyduringlibrarycleanup);
+    threadlistmutex = NULL;
+    n_unorderedset_destroy(threadlist);
+    threadlist = NULL;
+
     if ((nerr = __destroymutex(mutexlistmutex)) != NError_Success) panic_general(nerr, n_panicmsg_mutexdestroyduringlibrarycleanup);
     mutexlistmutex = NULL;
-
     n_unorderedset_destroy(mutexlist);
     mutexlist = NULL;
 
