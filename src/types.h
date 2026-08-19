@@ -9,7 +9,12 @@
 
 #include "libnthread.h"
 
-struct NThread { NTHREAD_THREADDESCRIPTOR desc; };
+struct NThread
+{
+    NTHREAD_THREADDESCRIPTOR desc;
+    NThreadAtomicBool joining;
+};
+
 struct NThreadMutex { NTHREAD_MUTEXDESCRIPTOR desc; };
 
 #endif

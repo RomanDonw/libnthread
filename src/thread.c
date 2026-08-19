@@ -46,6 +46,7 @@ NError nthread_create(NThread **thread, NThreadHandler handler, void *userdata)
     data->handler = handler;
     data->userdata = userdata;
 
+    ret->joining = NTHREAD_ATOMICBOOLINIT(false);
     #ifdef LIBNTHREAD_OS_WINDOWS
         if (!(ret->desc = _beginthreadex(NULL, 0, (void *)(&threadroutine), data, 0, NULL)))
         { free(data); free(ret); return translateERRNOerror(errno); }
@@ -71,8 +72,10 @@ NError nthread_join(NThread *thread, NThreadReturnType *exitcode)
     if (nerr != NError_Success) return nerr;
     
     bool has = n_unorderedset_haselement(threadlist, &thread);
+    if (!has) { nerr = NError_Fault; goto errorquit_onlyafterlistmtxlock; }
+
+    if (nthread_atomicbool_cmpxchgv(&thread->joining, false, true)) { nerr = NError_Already; goto errorquit_onlyafterlistmtxlock; }
     SAFE_MUTEX_UNLOCK(threadlistmutex);
-    if (!has) return NError_Fault;
 
     threadroutinerettype res;
     #ifdef LIBNTHREAD_OS_WINDOWS
@@ -91,6 +94,10 @@ NError nthread_join(NThread *thread, NThreadReturnType *exitcode)
 
     if (exitcode) *exitcode = (NThreadReturnType)((uintptr_t)res);
     return NError_Success;
+
+    errorquit_onlyafterlistmtxlock:
+        SAFE_MUTEX_UNLOCK(threadlistmutex);
+    return nerr;
 }
 
 /*
