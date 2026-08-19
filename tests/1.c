@@ -29,12 +29,15 @@ int main(void)
     NThread *t1, *t2;
     if ((nerr = nthread_create(&t1, (void *)t1_worker, NULL)) != NError_Success) { puts("failed to create thread 1"); return 1; }
     if ((nerr = nthread_create(&t2, (void *)t2_worker, NULL)) != NError_Success) { puts("failed to create thread 2"); return 1; }
+    puts("\nstarted 2 threads");
 
     NThreadReturnType ret;
     nthread_join(t1, &ret);
     printf("\nt1 ret: %hhu\n", ret);
     nthread_join(t2, &ret);
     printf("\nt2 ret: %hhu\n", ret);
+
+    puts("all threads must finish here");
 
     libnthread_cleanup();
     return 0;
