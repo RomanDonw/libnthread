@@ -48,11 +48,11 @@ NError nthread_create(NThread **thread, NThreadHandler handler, void *userdata)
 
     ret->joining = NTHREAD_ATOMICBOOLINIT(false);
     #ifdef LIBNTHREAD_OS_WINDOWS
-        if (!(ret->desc = _beginthreadex(NULL, 0, (void *)(&threadroutine), data, 0, NULL)))
-        { free(data); free(ret); return translateERRNOerror(errno); }
+        if (!(ret->desc = _beginthreadex(NULL, 0, (DWORD __stdcall (*)(void *))(&threadroutine), data, 0, NULL)))
+        { allocs.free(data); allocs.free(ret); return translateERRNOerror(errno); }
     #else
-        int err = pthread_create(&ret->desc, NULL, (void *)threadroutine, data);
-        if (err) { free(data); free(ret); return translateERRNOerror(err); }
+        int err = pthread_create(&ret->desc, NULL, (void *(*)(void *))threadroutine, data);
+        if (err) { allocs.free(data); allocs.free(ret); return translateERRNOerror(err); }
     #endif
 
     SAFE_MUTEX_LOCK(threadlistmutex);
@@ -86,7 +86,7 @@ NError nthread_join(NThread *thread, NThreadReturnType *exitcode)
         int err = pthread_join(thread->desc, &res);
         if (err) return translateERRNOerror(err);
     #endif
-    free(thread);
+    allocs.free(thread);
 
     SAFE_MUTEX_LOCK(threadlistmutex);
     if ((nerr = n_unorderedset_removeelement(threadlist, &thread)) != NError_Success) panic_general(nerr, "Unable to remove thread from threads list after factual destroying.");
