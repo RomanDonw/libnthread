@@ -20,10 +20,10 @@ NError __libnthread_translateERRNOerror(int err)
             return NError_MemoryAllocationFailed;
 
         case EBUSY:
-            return NError_MutexBusy;
+            return NError_Busy;
         
         case EDEADLOCK:
-            return NError_MutexDeadlock;
+            return NError_Deadlock;
 
         case EINVAL:
             return NError_IncorrectArgumentValue;
